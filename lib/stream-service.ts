@@ -2,6 +2,41 @@ import { Stream } from "@prisma/client"
 import { db } from "@/lib/db"
 import { getCachedData, invalidateCache } from "@/lib/redis"
 
+export async function getStreamById(streamId: string) {
+  return getCachedData({
+    key: `stream:id:${streamId}`,
+    ttl: 300, // 5 minutes
+    fetchFn: async () => {
+      return db.stream.findUnique({
+        where: { id: streamId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              imageUrl: true,
+            },
+          },
+          participants: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  imageUrl: true,
+                },
+              },
+            },
+            orderBy: {
+              createdAt: "asc",
+            },
+          },
+        },
+      })
+    }
+  })
+}
+
 export async function getStreamByUserId(userId: string) {
   return getCachedData({
     key: `stream:user:${userId}`,
