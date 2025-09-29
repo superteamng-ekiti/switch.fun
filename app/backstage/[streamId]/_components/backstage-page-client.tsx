@@ -3,6 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useBackstageData } from "@/hooks/use-backstage-data";
+import { useBackstageToken } from "@/hooks/use-backstage-token";
 import { BackstageLayout } from "./backstage-layout";
 import { Loader2 } from "lucide-react";
 
@@ -20,9 +21,16 @@ export const BackstagePageClient = ({ streamId }: BackstagePageClientProps) => {
     userQuery, 
     streamQuery 
   } = useBackstageData(streamId);
+  
+  const { 
+    data: tokenData, 
+    isLoading: tokenLoading, 
+    isError: tokenError,
+    error: tokenErrorMessage
+  } = useBackstageToken(streamId);
 
   // Handle loading state
-  if (isLoading) {
+  if (isLoading || tokenLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -34,8 +42,8 @@ export const BackstagePageClient = ({ streamId }: BackstagePageClientProps) => {
   }
 
   // Handle error states
-  if (isError) {
-    const errorMessage = error?.message || "Unknown error";
+  if (isError || tokenError) {
+    const errorMessage = error?.message || tokenErrorMessage?.message || "Unknown error";
     
     // Handle specific error cases
     if (errorMessage.includes("Unauthorized")) {
@@ -64,7 +72,7 @@ export const BackstagePageClient = ({ streamId }: BackstagePageClientProps) => {
   }
 
   // Handle unauthorized access
-  if (!data || !data.isAuthorized) {
+  if (!data || !data.isAuthorized || !tokenData) {
     router.push("/");
     return null;
   }
@@ -80,6 +88,8 @@ export const BackstagePageClient = ({ streamId }: BackstagePageClientProps) => {
       stream={data.stream}
       currentUser={data.user}
       userRole={data.userRole}
+      token={tokenData.token}
+      serverUrl={tokenData.serverUrl}
     />
   );
 };

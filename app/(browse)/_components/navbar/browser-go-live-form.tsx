@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { CategorySelector } from "./category-selector";
+import { MultiCategorySelector } from "./multi-category-selector";
 import { createBrowserStream } from "@/actions/browser-stream";
 
 interface BrowserGoLiveFormProps {
@@ -23,6 +24,8 @@ export const BrowserGoLiveForm = ({
 }: BrowserGoLiveFormProps) => {
   const [title, setTitle] = useState("");
   const [subCategoryId, setSubCategoryId] = useState("");
+  const [subCategoryIds, setSubCategoryIds] = useState<string[]>([]);
+  const [useMultiSelect, setUseMultiSelect] = useState(false);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -34,30 +37,41 @@ export const BrowserGoLiveForm = ({
       return;
     }
 
-    if (!subCategoryId) {
-      toast.error("Please select a category");
+    const selectedCategories = useMultiSelect
+      ? subCategoryIds
+      : [subCategoryId];
+    if (
+      selectedCategories.length === 0 ||
+      (useMultiSelect ? subCategoryIds.length === 0 : !subCategoryId)
+    ) {
+      toast.error("Please select at least one category");
       return;
     }
+
+    // Use the first selected category as the primary category for now
+    const primaryCategoryId = useMultiSelect
+      ? subCategoryIds[0]
+      : subCategoryId;
 
     startTransition(async () => {
       try {
         const result = await createBrowserStream({
           title: title.trim(),
-          subCategoryId,
+          subCategoryId: primaryCategoryId,
         });
 
         if (result.success) {
           console.log("Stream created successfully:", result.data.stream);
           toast.success("Browser stream created successfully!");
-          
+
           // Close modal first
           onClose?.();
-          
+
           // Small delay to ensure modal closes, then redirect
           setTimeout(() => {
             const backstageUrl = `/backstage/${result.data.stream.id}`;
             console.log("Redirecting to:", backstageUrl);
-            
+
             // Try router.push first, fallback to window.location
             try {
               router.push(backstageUrl);
@@ -104,19 +118,47 @@ export const BrowserGoLiveForm = ({
 
         {/* Category Selection */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Category</label>
-          <CategorySelector
-            value={subCategoryId}
-            onValueChange={setSubCategoryId}
-            disabled={isPending}
-          />
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-300">
+              Category
+            </label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setUseMultiSelect(!useMultiSelect)}
+              className="h-6 px-2 text-xs text-gray-400 hover:text-white"
+            >
+              {useMultiSelect ? "Single Select" : "Multi Select"}
+            </Button>
+          </div>
+
+          {useMultiSelect ? (
+            <MultiCategorySelector
+              value={subCategoryIds}
+              onValueChange={setSubCategoryIds}
+              disabled={isPending}
+              maxSelections={3}
+              placeholder="Select up to 3 categories..."
+            />
+          ) : (
+            <CategorySelector
+              value={subCategoryId}
+              onValueChange={setSubCategoryId}
+              disabled={isPending}
+            />
+          )}
         </div>
 
         {/* Go Live Button */}
         <div className="flex justify-center pt-4">
           <Button
             type="submit"
-            disabled={isPending || !title.trim() || !subCategoryId}
+            disabled={
+              isPending ||
+              !title.trim() ||
+              (useMultiSelect ? subCategoryIds.length === 0 : !subCategoryId)
+            }
             className="bg-red-600 hover:bg-red-700 text-white px-8 py-2 rounded-md font-medium"
           >
             {isPending ? (

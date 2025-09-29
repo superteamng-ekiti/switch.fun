@@ -42,6 +42,7 @@ model Stream {
   isChatDelayed       Boolean             @default(false)
   isChatFollowersOnly Boolean             @default(false)
   userId              String              @unique
+  subCategoryId       String?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   streamStartedAt     DateTime?
@@ -51,6 +52,7 @@ model Stream {
   isPreLive           Boolean             @default(false)
   liveKitRoomName     String?
   user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subCategory         SubCategory?        @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
   tips                Tip[]
   participants        StreamParticipant[]
 
@@ -61,6 +63,7 @@ model Stream {
   @@index([streamType])
   @@index([isPreLive])
   @@index([liveKitRoomName])
+  @@index([subCategoryId])
 }
 
 model PlatformAnalytics {
@@ -137,6 +140,7 @@ model SubCategory {
   updatedAt     DateTime       @updatedAt
   category      Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   userInterests UserInterest[]
+  streams       Stream[]
 
   @@unique([categoryId, name])
   @@index([categoryId])

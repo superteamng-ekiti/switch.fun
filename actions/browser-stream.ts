@@ -101,6 +101,7 @@ export async function createBrowserStream(data: z.infer<typeof createBrowserStre
         data: {
           name: validated.title,
           title: validated.title,
+          subCategoryId: validated.subCategoryId,
           streamType: "BROWSER", // Ensure stream type is set to BROWSER
           isPreLive: true, // Reset to backstage mode
           liveKitRoomName: existingStream.liveKitRoomName || `browser_${self.id}_${Date.now()}`,
@@ -141,6 +142,7 @@ export async function createBrowserStream(data: z.infer<typeof createBrowserStre
           name: validated.title,
           title: validated.title,
           userId: self.id,
+          subCategoryId: validated.subCategoryId,
           streamType: "BROWSER",
           isPreLive: true, // Start in backstage mode
           liveKitRoomName: roomName,

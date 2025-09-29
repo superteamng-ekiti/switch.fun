@@ -4,16 +4,17 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { LiveKitRoom } from "@livekit/components-react";
 import { 
-  Users, 
   Settings, 
   Play, 
-  UserPlus, 
   Mic, 
   Video,
   Monitor,
-  Clock
+  Clock,
+  UserPlus
 } from "lucide-react";
+import { RealTimeParticipants } from "./real-time-participants";
 
 interface Stream {
   id: string;
@@ -46,9 +47,11 @@ interface BackstageLayoutProps {
     username: string;
   };
   userRole: string;
+  token: string;
+  serverUrl: string;
 }
 
-export const BackstageLayout = ({ stream, currentUser, userRole }: BackstageLayoutProps) => {
+export const BackstageLayout = ({ stream, currentUser, userRole, token, serverUrl }: BackstageLayoutProps) => {
   const [isGoingLive, setIsGoingLive] = useState(false);
 
   const handleGoLive = async () => {
@@ -61,7 +64,11 @@ export const BackstageLayout = ({ stream, currentUser, userRole }: BackstageLayo
   const isHost = userRole === "HOST";
 
   return (
-    <div className="min-h-screen bg-background">
+    <LiveKitRoom
+      token={token}
+      serverUrl={serverUrl}
+      className="min-h-screen bg-background"
+    >
       {/* Header */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
@@ -156,52 +163,12 @@ export const BackstageLayout = ({ stream, currentUser, userRole }: BackstageLayo
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Participants */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Participants ({stream.participants.length})
-                  </div>
-                  {isHost && (
-                    <Button variant="outline" size="sm">
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Invite
-                    </Button>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {stream.participants.map((participant) => (
-                  <div key={participant.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-sm font-medium">
-                          {participant.user.username.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">@{participant.user.username}</p>
-                        <Badge variant="outline" className="text-xs">
-                          {participant.role.replace("_", " ")}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 rounded-full bg-green-500" title="Online" />
-                    </div>
-                  </div>
-                ))}
-                
-                {stream.participants.length === 0 && (
-                  <div className="text-center py-4 text-muted-foreground">
-                    <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No participants yet</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Real-time Participants */}
+            <RealTimeParticipants 
+              streamId={stream.id}
+              currentUserId={currentUser.id}
+              userRole={userRole}
+            />
 
             {/* Quick Actions */}
             <Card>
@@ -226,6 +193,6 @@ export const BackstageLayout = ({ stream, currentUser, userRole }: BackstageLayo
           </div>
         </div>
       </div>
-    </div>
+    </LiveKitRoom>
   );
 };
