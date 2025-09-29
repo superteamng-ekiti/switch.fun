@@ -9,52 +9,58 @@ datasource db {
 }
 
 model User {
-  id                     String         @id @default(uuid())
-  username               String         @unique
+  id                     String              @id @default(uuid())
+  username               String              @unique
   imageUrl               String
-  externalUserId         String         @unique
+  externalUserId         String              @unique
   bio                    String?
-  createdAt              DateTime       @default(now())
-  updatedAt              DateTime       @updatedAt
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
   solanaWallet           String?
-  isSolanaPlatformWallet Boolean        @default(false)
+  isSolanaPlatformWallet Boolean             @default(false)
   platformWallet         String?
-  following              Follow[]       @relation("Following")
-  followedBy             Follow[]       @relation("FollowedBy")
-  blocking               Block[]        @relation("Blocking")
-  blockedBy              Block[]        @relation("BlockedBy")
+  following              Follow[]            @relation("Following")
+  followedBy             Follow[]            @relation("FollowedBy")
+  blocking               Block[]             @relation("Blocking")
+  blockedBy              Block[]             @relation("BlockedBy")
   stream                 Stream?
   interests              UserInterest[]
-  tipsSent               Tip[]          @relation("TipsSent")
-  tipsReceived           Tip[]          @relation("TipsReceived")
+  tipsSent               Tip[]               @relation("TipsSent")
+  tipsReceived           Tip[]               @relation("TipsReceived")
+  streamParticipations   StreamParticipant[]
 }
 
 model Stream {
-  id                  String     @id @default(uuid())
+  id                  String              @id @default(uuid())
   name                String
   thumbnailUrl        String?
-  ingressId           String?    @unique
+  ingressId           String?             @unique
   serverUrl           String?
   streamKey           String?
-  isLive              Boolean    @default(false)
-  isChatEnabled       Boolean    @default(true)
-  isChatDelayed       Boolean    @default(false)
-  isChatFollowersOnly Boolean    @default(false)
-  userId              String     @unique
-  createdAt           DateTime   @default(now())
-  updatedAt           DateTime   @updatedAt
+  isLive              Boolean             @default(false)
+  isChatEnabled       Boolean             @default(true)
+  isChatDelayed       Boolean             @default(false)
+  isChatFollowersOnly Boolean             @default(false)
+  userId              String              @unique
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
   streamStartedAt     DateTime?
-  views               Int        @default(0)
-  streamType          StreamType @default(INGRESS)
+  views               Int                 @default(0)
+  streamType          StreamType          @default(INGRESS)
   title               String?
-  user                User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPreLive           Boolean             @default(false)
+  liveKitRoomName     String?
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   tips                Tip[]
+  participants        StreamParticipant[]
 
   @@index([userId])
   @@index([ingressId])
   @@index([views])
   @@index([isLive, streamType])
   @@index([streamType])
+  @@index([isPreLive])
+  @@index([liveKitRoomName])
 }
 
 model PlatformAnalytics {
@@ -178,6 +184,28 @@ model Tip {
   @@index([tokenType])
 }
 
+model StreamParticipant {
+  id          String            @id @default(uuid())
+  streamId    String
+  userId      String
+  role        ParticipantRole   @default(VIEWER)
+  status      ParticipantStatus @default(INVITED)
+  joinedAt    DateTime?
+  leftAt      DateTime?
+  canSpeak    Boolean           @default(false)
+  canVideo    Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  stream      Stream            @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([streamId, userId])
+  @@index([streamId])
+  @@index([userId])
+  @@index([role])
+  @@index([status])
+}
+
 enum TokenType {
   USDC
   SOL
@@ -186,4 +214,19 @@ enum TokenType {
 enum StreamType {
   INGRESS
   BROWSER
+}
+
+enum ParticipantRole {
+  HOST
+  CO_HOST
+  SPEAKER
+  VIEWER
+  MODERATOR
+}
+
+enum ParticipantStatus {
+  INVITED
+  JOINED
+  LEFT
+  KICKED
 }
