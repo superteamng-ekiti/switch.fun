@@ -31,6 +31,8 @@
     --destructive-foreground: 210 40% 98%;
 
     --light-dark-card: 0 0 6%;
+    --light-dark-card-hover: 0 0 9%;
+    --dark-card: 0 0 11%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;

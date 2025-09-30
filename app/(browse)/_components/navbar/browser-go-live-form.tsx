@@ -61,7 +61,6 @@ export const BrowserGoLiveForm = ({
         });
 
         if (result.success) {
-          console.log("Stream created successfully:", result.data.stream);
           toast.success("Browser stream created successfully!");
 
           // Close modal first
@@ -70,7 +69,6 @@ export const BrowserGoLiveForm = ({
           // Small delay to ensure modal closes, then redirect
           setTimeout(() => {
             const backstageUrl = `/backstage/${result.data.stream.id}`;
-            console.log("Redirecting to:", backstageUrl);
 
             // Try router.push first, fallback to window.location
             try {
@@ -82,7 +80,6 @@ export const BrowserGoLiveForm = ({
           }, 100);
         }
       } catch (error) {
-        console.error("Error creating browser stream:", error);
         toast.error(
           error instanceof Error ? error.message : "Failed to create stream"
         );

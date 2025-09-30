@@ -1,6 +1,7 @@
 import React from 'react'
 import { BackstageStreamScreen } from './backstage-stream-screen'
 import { BackstageLayoutSelector } from './backstage-layout-selector'
+import { BackstageFooterAction } from './backstage-footer-action'
 
 export const BackstageMainSection = () => {
   return (
@@ -11,7 +12,7 @@ export const BackstageMainSection = () => {
         </div>
 
         <div className='w-full h-[80px] bg-lightDarkCard border-t border-t-border/40'>
-            
+            <BackstageFooterAction />
         </div>
     </div>
   )

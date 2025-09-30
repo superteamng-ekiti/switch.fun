@@ -208,14 +208,6 @@ export async function createBrowserStream(data: z.infer<typeof createBrowserStre
     revalidatePath(`/u/${self.username}`);
     revalidatePath(`/backstage/${stream.id}`);
 
-    console.log("[createBrowserStream] Successfully created stream:", {
-      streamId: stream.id,
-      title: stream.title,
-      userId: self.id,
-      username: self.username,
-      roomName: stream.liveKitRoomName,
-    });
-
     return {
       success: true,
       data: {

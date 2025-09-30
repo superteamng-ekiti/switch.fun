@@ -25,6 +25,8 @@ module.exports = withUt({
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         lightDarkCard: "hsl(var(--light-dark-card))",
+        lightDarkCardHover: "hsl(var(--light-dark-card-hover))",
+        darkCard: "hsl(var(--dark-card))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

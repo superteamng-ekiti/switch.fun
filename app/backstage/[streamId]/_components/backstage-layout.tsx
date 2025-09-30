@@ -1,23 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { LiveKitRoom } from "@livekit/components-react";
-import {
-  Settings,
-  Play,
-  Mic,
-  Video,
-  Monitor,
-  Clock,
-  UserPlus,
-} from "lucide-react";
-import { RealTimeParticipants } from "./real-time-participants";
 import { BackstageHeader } from "./backstage-header";
 import { BackstageActionsSection } from "./backstage-actions-section";
 import { BackstageMainSection } from "./backstage-main-section";
+import { useBackstageMedia } from "@/hooks/use-backstage-media";
+import { useBackstageLiveKit } from "@/hooks/use-backstage-livekit";
 
 interface Stream {
   id: string;
@@ -54,38 +43,56 @@ interface BackstageLayoutProps {
   serverUrl: string;
 }
 
-export const BackstageLayout = ({
+function BackstageContent({
   stream,
   currentUser,
   userRole,
-  token,
-  serverUrl,
-}: BackstageLayoutProps) => {
-  const [isGoingLive, setIsGoingLive] = useState(false);
-
-  const handleGoLive = async () => {
-    setIsGoingLive(true);
-    // TODO: Implement go live functionality
-    console.log("Going live...");
-  };
-
-  const coHosts = stream.participants.filter((p) => p.role === "CO_HOST");
-  const isHost = userRole === "HOST";
+}: {
+  stream: Stream;
+  currentUser: { id: string; username: string };
+  userRole: string;
+}) {
+  // Initialize backstage hooks
+  useBackstageMedia();
+  useBackstageLiveKit();
 
   return (
-    <LiveKitRoom
-      token={token}
-      serverUrl={serverUrl}
-      className="min-h-screen bg-background"
-    >
+    <>
       {/* Header */}
       <BackstageHeader />
 
       <div className="w-full h-[calc(100vh-4rem)] flex gap-0">
         <BackstageMainSection />
 
-        <BackstageActionsSection />
+        <BackstageActionsSection
+          streamId={stream.id}
+          currentUserId={currentUser.id}
+          userRole={userRole}
+        />
       </div>
+    </>
+  );
+}
+
+export function BackstageLayout({
+  stream,
+  currentUser,
+  userRole,
+  token,
+  serverUrl,
+}: BackstageLayoutProps) {
+  return (
+    <LiveKitRoom
+      token={token}
+      serverUrl={serverUrl}
+      className="min-h-screen bg-background"
+      connect={true}
+    >
+      <BackstageContent
+        stream={stream}
+        currentUser={currentUser}
+        userRole={userRole}
+      />
     </LiveKitRoom>
   );
-};
+}
