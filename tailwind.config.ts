@@ -24,6 +24,7 @@ module.exports = withUt({
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        lightDarkCard: "hsl(var(--light-dark-card))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

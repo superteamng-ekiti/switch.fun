@@ -5,16 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LiveKitRoom } from "@livekit/components-react";
-import { 
-  Settings, 
-  Play, 
-  Mic, 
+import {
+  Settings,
+  Play,
+  Mic,
   Video,
   Monitor,
   Clock,
-  UserPlus
+  UserPlus,
 } from "lucide-react";
 import { RealTimeParticipants } from "./real-time-participants";
+import { BackstageHeader } from "./backstage-header";
+import { BackstageActionsSection } from "./backstage-actions-section";
+import { BackstageMainSection } from "./backstage-main-section";
 
 interface Stream {
   id: string;
@@ -51,7 +54,13 @@ interface BackstageLayoutProps {
   serverUrl: string;
 }
 
-export const BackstageLayout = ({ stream, currentUser, userRole, token, serverUrl }: BackstageLayoutProps) => {
+export const BackstageLayout = ({
+  stream,
+  currentUser,
+  userRole,
+  token,
+  serverUrl,
+}: BackstageLayoutProps) => {
   const [isGoingLive, setIsGoingLive] = useState(false);
 
   const handleGoLive = async () => {
@@ -60,7 +69,7 @@ export const BackstageLayout = ({ stream, currentUser, userRole, token, serverUr
     console.log("Going live...");
   };
 
-  const coHosts = stream.participants.filter(p => p.role === "CO_HOST");
+  const coHosts = stream.participants.filter((p) => p.role === "CO_HOST");
   const isHost = userRole === "HOST";
 
   return (
@@ -70,128 +79,12 @@ export const BackstageLayout = ({ stream, currentUser, userRole, token, serverUr
       className="min-h-screen bg-background"
     >
       {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Monitor className="h-6 w-6 text-primary" />
-                <h1 className="text-xl font-semibold">Backstage</h1>
-              </div>
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                Pre-Live
-              </Badge>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
-              <Button 
-                onClick={handleGoLive}
-                disabled={isGoingLive}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                <Play className="h-4 w-4 mr-2" />
-                {isGoingLive ? "Going Live..." : "Go Live"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <BackstageHeader />
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Stream Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Monitor className="h-5 w-5" />
-                  Stream Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Title</label>
-                  <p className="text-lg font-medium">{stream.title || stream.name}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Streamer</label>
-                  <p className="font-medium">@{stream.user.username}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Room ID</label>
-                  <p className="font-mono text-sm bg-muted px-2 py-1 rounded">
-                    {stream.liveKitRoomName}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+      <div className="w-full h-[calc(100vh-4rem)] flex gap-0">
+        <BackstageMainSection />
 
-            {/* Stream Preview */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Video className="h-5 w-5" />
-                  Stream Preview
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                  <div className="text-center space-y-2">
-                    <Video className="h-12 w-12 mx-auto text-muted-foreground" />
-                    <p className="text-muted-foreground">Camera preview will appear here</p>
-                    <div className="flex gap-2 justify-center">
-                      <Button variant="outline" size="sm">
-                        <Video className="h-4 w-4 mr-2" />
-                        Enable Camera
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Mic className="h-4 w-4 mr-2" />
-                        Enable Mic
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Real-time Participants */}
-            <RealTimeParticipants 
-              streamId={stream.id}
-              currentUserId={currentUser.id}
-              userRole={userRole}
-            />
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Stream Settings
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Invite Co-hosts
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Monitor className="h-4 w-4 mr-2" />
-                  Test Stream
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        <BackstageActionsSection />
       </div>
     </LiveKitRoom>
   );
