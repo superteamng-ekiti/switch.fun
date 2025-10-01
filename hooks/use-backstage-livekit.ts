@@ -8,6 +8,10 @@ import {
   type MediaDevice,
 } from "@/store/backstage-atoms";
 
+// Debug logging only in development
+const DEBUG = process.env.NODE_ENV === 'development';
+const log = DEBUG ? console.log.bind(console) : () => {};
+
 /**
  * Hook to sync LiveKit media state with Jotai atoms
  * Handles bidirectional sync between LiveKit tracks and backstage state
@@ -21,7 +25,7 @@ export function useBackstageLiveKit() {
   // Sync microphone state with LiveKit
   useEffect(() => {
     if (!localParticipant) {
-      console.log("[useBackstageLiveKit] No local participant yet");
+      log("[useBackstageLiveKit] No local participant yet");
       return;
     }
 
@@ -30,12 +34,12 @@ export function useBackstageLiveKit() {
         const currentlyEnabled = localParticipant.isMicrophoneEnabled;
         const desiredState = mediaState.isMicEnabled;
         
-        console.log("[useBackstageLiveKit] Mic sync - Current:", currentlyEnabled, "Desired:", desiredState);
+        log("[useBackstageLiveKit] Mic sync - Current:", currentlyEnabled, "Desired:", desiredState);
         
         if (desiredState !== currentlyEnabled) {
-          console.log("[useBackstageLiveKit] Toggling microphone to:", desiredState);
+          log("[useBackstageLiveKit] Toggling microphone to:", desiredState);
           await localParticipant.setMicrophoneEnabled(desiredState);
-          console.log("[useBackstageLiveKit] Microphone toggled successfully");
+          log("[useBackstageLiveKit] Microphone toggled successfully");
           
           // TODO: Device switching - requires LiveKit SDK update or custom implementation
           // The switchActiveDevice method may not be available in current SDK version
@@ -51,7 +55,7 @@ export function useBackstageLiveKit() {
   // Sync camera state with LiveKit
   useEffect(() => {
     if (!localParticipant) {
-      console.log("[useBackstageLiveKit] No local participant yet");
+      log("[useBackstageLiveKit] No local participant yet");
       return;
     }
 
@@ -60,12 +64,12 @@ export function useBackstageLiveKit() {
         const currentlyEnabled = localParticipant.isCameraEnabled;
         const desiredState = mediaState.isCameraEnabled;
         
-        console.log("[useBackstageLiveKit] Camera sync - Current:", currentlyEnabled, "Desired:", desiredState);
+        log("[useBackstageLiveKit] Camera sync - Current:", currentlyEnabled, "Desired:", desiredState);
         
         if (desiredState !== currentlyEnabled) {
-          console.log("[useBackstageLiveKit] Toggling camera to:", desiredState);
+          log("[useBackstageLiveKit] Toggling camera to:", desiredState);
           await localParticipant.setCameraEnabled(desiredState);
-          console.log("[useBackstageLiveKit] Camera toggled successfully");
+          log("[useBackstageLiveKit] Camera toggled successfully");
           
           // TODO: Device switching - requires LiveKit SDK update or custom implementation
         }
@@ -96,35 +100,6 @@ export function useBackstageLiveKit() {
     syncScreenShare();
   }, [localParticipant, mediaState.isScreenSharing]);
 
-  // Update available devices using browser API
-  useEffect(() => {
-    const updateDevices = async () => {
-      try {
-        // Use browser's enumerateDevices API
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const mediaDevices: MediaDevice[] = devices.map((device: MediaDeviceInfo) => ({
-          deviceId: device.deviceId,
-          label: device.label || `${device.kind} ${device.deviceId.slice(0, 5)}`,
-          kind: device.kind as "audioinput" | "videoinput" | "audiooutput",
-        }));
-
-        setAvailableDevices(mediaDevices);
-      } catch (error) {
-        console.error("[useBackstageLiveKit] Error updating devices:", error);
-      }
-    };
-
-    updateDevices();
-
-    // Listen for device changes
-    const handleDeviceChange = () => {
-      updateDevices();
-    };
-
-    navigator.mediaDevices.addEventListener("devicechange", handleDeviceChange);
-
-    return () => {
-      navigator.mediaDevices.removeEventListener("devicechange", handleDeviceChange);
-    };
-  }, [setAvailableDevices]);
+  // Note: Device enumeration is handled by useBackstageMedia hook
+  // to avoid duplicate getUserMedia() calls and event listeners
 }

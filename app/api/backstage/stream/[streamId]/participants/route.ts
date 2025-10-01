@@ -20,42 +20,31 @@ export async function GET(request: Request, { params }: RouteParams) {
       );
     }
 
-    // Get participants with caching for performance
+    // Optimized: Single query with authorization check and participant fetch
     const participants = await getCachedData({
-      key: `participants:stream:${params.streamId}`,
-      ttl: 60, // 1 minute cache for participant data
+      key: `participants:stream:${params.streamId}:${self.id}`,
+      ttl: 300, // 5 minutes cache (increased from 1 minute)
       fetchFn: async () => {
-        // First verify the user has access to this stream
-        const stream = await db.stream.findUnique({
-          where: { id: params.streamId },
-          select: {
-            id: true,
-            userId: true,
-            participants: {
-              where: { userId: self.id },
-              select: { role: true },
-              take: 1,
+        // Single optimized query: authorization + participants in ONE query
+        return db.streamParticipant.findMany({
+          where: {
+            streamId: params.streamId,
+            // Authorization check in the query itself
+            stream: {
+              OR: [
+                { userId: self.id }, // User is owner
+                {
+                  participants: {
+                    some: {
+                      userId: self.id,
+                      role: { in: ["HOST", "CO_HOST"] },
+                      status: "JOINED",
+                    },
+                  },
+                },
+              ],
             },
           },
-        });
-
-        if (!stream) {
-          throw new Error("Stream not found");
-        }
-
-        // Check authorization
-        const userParticipant = stream.participants[0];
-        const isOwner = stream.userId === self.id;
-        const isAuthorized = isOwner || (userParticipant && 
-          (userParticipant.role === "HOST" || userParticipant.role === "CO_HOST"));
-
-        if (!isAuthorized) {
-          throw new Error("Access denied");
-        }
-
-        // Fetch all participants for this stream
-        return db.streamParticipant.findMany({
-          where: { streamId: params.streamId },
           select: {
             id: true,
             role: true,
@@ -80,25 +69,17 @@ export async function GET(request: Request, { params }: RouteParams) {
       },
     });
 
+    // If no participants returned, user doesn't have access
+    if (!participants || participants.length === 0) {
+      return NextResponse.json(
+        { error: "Access denied" },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json(participants);
   } catch (error) {
     console.error(`[API] /api/backstage/stream/${params.streamId}/participants error:`, error);
-    
-    if (error instanceof Error) {
-      if (error.message === "Stream not found") {
-        return NextResponse.json(
-          { error: "Stream not found" },
-          { status: 404 }
-        );
-      }
-      
-      if (error.message === "Access denied") {
-        return NextResponse.json(
-          { error: "Access denied" },
-          { status: 403 }
-        );
-      }
-    }
     
     return NextResponse.json(
       { error: "Failed to fetch participants" },

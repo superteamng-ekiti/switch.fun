@@ -8,7 +8,6 @@ import { AccessToken } from "livekit-server-sdk";
 
 const createBrowserStreamSchema = z.object({
   title: z.string().min(1, "Stream title is required").max(100, "Title too long"),
-  subCategoryId: z.string().min(1, "Category is required"),
 });
 
 export async function createBrowserStream(data: z.infer<typeof createBrowserStreamSchema>) {
@@ -21,15 +20,20 @@ export async function createBrowserStream(data: z.infer<typeof createBrowserStre
 
     const validated = createBrowserStreamSchema.parse(data);
 
-    // Verify subcategory exists
-    const subCategory = await db.subCategory.findUnique({
-      where: { id: validated.subCategoryId, isActive: true },
-      include: { category: true },
+    // Get user's primary interest for the stream category
+    const userWithInterests = await db.user.findUnique({
+      where: { id: self.id },
+      include: {
+        interests: {
+          take: 1,
+          orderBy: { createdAt: 'asc' },
+          include: { subCategory: true },
+        },
+      },
     });
 
-    if (!subCategory) {
-      throw new Error("Invalid category selected");
-    }
+    // Use first interest as stream category, or null if none
+    const subCategoryId = userWithInterests?.interests[0]?.subCategoryId || null;
 
     // Check if user already has a stream
     const existingStream = await db.stream.findUnique({
@@ -101,7 +105,7 @@ export async function createBrowserStream(data: z.infer<typeof createBrowserStre
         data: {
           name: validated.title,
           title: validated.title,
-          subCategoryId: validated.subCategoryId,
+          subCategoryId: subCategoryId,
           streamType: "BROWSER", // Ensure stream type is set to BROWSER
           isPreLive: true, // Reset to backstage mode
           liveKitRoomName: existingStream.liveKitRoomName || `browser_${self.id}_${Date.now()}`,
@@ -142,7 +146,7 @@ export async function createBrowserStream(data: z.infer<typeof createBrowserStre
           name: validated.title,
           title: validated.title,
           userId: self.id,
-          subCategoryId: validated.subCategoryId,
+          subCategoryId: subCategoryId,
           streamType: "BROWSER",
           isPreLive: true, // Start in backstage mode
           liveKitRoomName: roomName,

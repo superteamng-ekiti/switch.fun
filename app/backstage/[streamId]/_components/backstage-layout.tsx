@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { memo } from "react";
 import { LiveKitRoom } from "@livekit/components-react";
 import { BackstageHeader } from "./backstage-header";
 import { BackstageActionsSection } from "./backstage-actions-section";
 import { BackstageMainSection } from "./backstage-main-section";
+import { BackstageErrorBoundary } from "./backstage-error-boundary";
 import { useBackstageMedia } from "@/hooks/use-backstage-media";
 import { useBackstageLiveKit } from "@/hooks/use-backstage-livekit";
+
+// Layout constants
+const HEADER_HEIGHT = '4rem';
 
 interface Stream {
   id: string;
@@ -20,7 +24,7 @@ interface Stream {
     username: string;
     imageUrl: string;
   };
-  participants: Array<{
+  participants?: Array<{
     id: string;
     role: string;
     status: string;
@@ -43,15 +47,17 @@ interface BackstageLayoutProps {
   serverUrl: string;
 }
 
-function BackstageContent({
-  stream,
-  currentUser,
-  userRole,
-}: {
+interface BackstageContentProps {
   stream: Stream;
   currentUser: { id: string; username: string };
   userRole: string;
-}) {
+}
+
+const BackstageContent = memo(function BackstageContent({
+  stream,
+  currentUser,
+  userRole,
+}: BackstageContentProps) {
   // Initialize backstage hooks
   useBackstageMedia();
   useBackstageLiveKit();
@@ -61,8 +67,15 @@ function BackstageContent({
       {/* Header */}
       <BackstageHeader />
 
-      <div className="w-full h-[calc(100vh-4rem)] flex gap-0">
-        <BackstageMainSection />
+      <div 
+        className="w-full flex gap-0"
+        style={{ height: `calc(100vh - ${HEADER_HEIGHT})` }}
+      >
+        <BackstageMainSection 
+          streamId={stream.id}
+          currentUserId={currentUser.id}
+          userRole={userRole}
+        />
 
         <BackstageActionsSection
           streamId={stream.id}
@@ -72,7 +85,10 @@ function BackstageContent({
       </div>
     </>
   );
-}
+});
+
+// Set display name for React DevTools
+BackstageContent.displayName = 'BackstageContent';
 
 export function BackstageLayout({
   stream,
@@ -82,17 +98,32 @@ export function BackstageLayout({
   serverUrl,
 }: BackstageLayoutProps) {
   return (
-    <LiveKitRoom
-      token={token}
-      serverUrl={serverUrl}
-      className="min-h-screen bg-background"
-      connect={true}
-    >
-      <BackstageContent
-        stream={stream}
-        currentUser={currentUser}
-        userRole={userRole}
-      />
-    </LiveKitRoom>
+    <BackstageErrorBoundary>
+      <LiveKitRoom
+        token={token}
+        serverUrl={serverUrl}
+        className="min-h-screen bg-background"
+        connect={true}
+        onConnected={() => {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[BackstageLayout] Connected to LiveKit');
+          }
+        }}
+        onDisconnected={() => {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[BackstageLayout] Disconnected from LiveKit');
+          }
+        }}
+        onError={(error) => {
+          console.error('[BackstageLayout] LiveKit error:', error);
+        }}
+      >
+        <BackstageContent
+          stream={stream}
+          currentUser={currentUser}
+          userRole={userRole}
+        />
+      </LiveKitRoom>
+    </BackstageErrorBoundary>
   );
 }

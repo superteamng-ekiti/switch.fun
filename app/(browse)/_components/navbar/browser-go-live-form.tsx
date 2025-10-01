@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { CategorySelector } from "./category-selector";
-import { MultiCategorySelector } from "./multi-category-selector";
 import { createBrowserStream } from "@/actions/browser-stream";
 
 interface BrowserGoLiveFormProps {
@@ -23,9 +21,6 @@ export const BrowserGoLiveForm = ({
   onClose,
 }: BrowserGoLiveFormProps) => {
   const [title, setTitle] = useState("");
-  const [subCategoryId, setSubCategoryId] = useState("");
-  const [subCategoryIds, setSubCategoryIds] = useState<string[]>([]);
-  const [useMultiSelect, setUseMultiSelect] = useState(false);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -37,27 +32,10 @@ export const BrowserGoLiveForm = ({
       return;
     }
 
-    const selectedCategories = useMultiSelect
-      ? subCategoryIds
-      : [subCategoryId];
-    if (
-      selectedCategories.length === 0 ||
-      (useMultiSelect ? subCategoryIds.length === 0 : !subCategoryId)
-    ) {
-      toast.error("Please select at least one category");
-      return;
-    }
-
-    // Use the first selected category as the primary category for now
-    const primaryCategoryId = useMultiSelect
-      ? subCategoryIds[0]
-      : subCategoryId;
-
     startTransition(async () => {
       try {
         const result = await createBrowserStream({
           title: title.trim(),
-          subCategoryId: primaryCategoryId,
         });
 
         if (result.success) {
@@ -93,7 +71,7 @@ export const BrowserGoLiveForm = ({
         Start a New Stream
       </h2>
       <p className="text-gray-300 text-center mb-8">
-        Add a title and category. You can update it later.
+        Add a title for your stream. You can update it later.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -110,52 +88,15 @@ export const BrowserGoLiveForm = ({
             maxLength={100}
             disabled={isPending}
             className="bg-black border-border h-12 text-white placeholder-gray-400"
+            autoFocus
           />
-        </div>
-
-        {/* Category Selection */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-300">
-              Category
-            </label>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setUseMultiSelect(!useMultiSelect)}
-              className="h-6 px-2 text-xs text-gray-400 hover:text-white"
-            >
-              {useMultiSelect ? "Single Select" : "Multi Select"}
-            </Button>
-          </div>
-
-          {useMultiSelect ? (
-            <MultiCategorySelector
-              value={subCategoryIds}
-              onValueChange={setSubCategoryIds}
-              disabled={isPending}
-              maxSelections={3}
-              placeholder="Select up to 3 categories..."
-            />
-          ) : (
-            <CategorySelector
-              value={subCategoryId}
-              onValueChange={setSubCategoryId}
-              disabled={isPending}
-            />
-          )}
         </div>
 
         {/* Go Live Button */}
         <div className="flex justify-center pt-4">
           <Button
             type="submit"
-            disabled={
-              isPending ||
-              !title.trim() ||
-              (useMultiSelect ? subCategoryIds.length === 0 : !subCategoryId)
-            }
+            disabled={isPending || !title.trim()}
             className="bg-red-600 hover:bg-red-700 text-white px-8 py-2 rounded-md font-medium"
           >
             {isPending ? (

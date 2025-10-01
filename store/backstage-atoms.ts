@@ -138,7 +138,6 @@ export const toggleMicAtom = atom(null, (get, set) => {
 export const toggleCameraAtom = atom(null, (get, set) => {
   const currentState = get(mediaStateAtom);
   const newState = !currentState.isCameraEnabled;
-  console.log("[toggleCameraAtom] Toggling camera from", currentState.isCameraEnabled, "to", newState);
   set(mediaStateAtom, {
     ...currentState,
     isCameraEnabled: newState,

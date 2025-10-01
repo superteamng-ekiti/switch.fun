@@ -53,7 +53,7 @@ export function BackstageLayoutSelector() {
             width={index === 6 ? 117 : 94}
             height={64}
             className={cn(
-              "hover:border hover:border-primary transition-colors",
+              "hover:border hover:border-primary transition-colors rounded-[4px]",
               selectedLayout === layout.name && "border border-primary"
             )}
           />

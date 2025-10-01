@@ -2,10 +2,9 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useBackstageData } from "@/hooks/use-backstage-data";
-import { useBackstageToken } from "@/hooks/use-backstage-token";
+import { useBackstageComplete } from "@/hooks/use-backstage-complete";
 import { BackstageLayout } from "./backstage-layout";
-import { Loader2 } from "lucide-react";
+import { BackstageSkeleton } from "./backstage-skeleton";
 
 interface BackstagePageClientProps {
   streamId: string;
@@ -13,49 +12,29 @@ interface BackstagePageClientProps {
 
 export const BackstagePageClient = ({ streamId }: BackstagePageClientProps) => {
   const router = useRouter();
-  const { 
-    data, 
-    isLoading, 
-    isError, 
-    error, 
-    userQuery, 
-    streamQuery 
-  } = useBackstageData(streamId);
-  
-  const { 
-    data: tokenData, 
-    isLoading: tokenLoading, 
-    isError: tokenError,
-    error: tokenErrorMessage
-  } = useBackstageToken(streamId);
+
+  const { data, isLoading, isError, error } = useBackstageComplete(streamId);
 
   // Handle loading state
-  if (isLoading || tokenLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="text-muted-foreground">Loading backstage...</p>
-        </div>
-      </div>
-    );
+  if (isLoading) {
+    return <BackstageSkeleton />;
   }
 
   // Handle error states
-  if (isError || tokenError) {
-    const errorMessage = error?.message || tokenErrorMessage?.message || "Unknown error";
-    
+  if (isError) {
+    const errorMessage = error?.message || "Unknown error";
+
     // Handle specific error cases
     if (errorMessage.includes("Unauthorized")) {
       router.push("/");
       return null;
     }
-    
+
     if (errorMessage.includes("not found")) {
       router.push("/");
       return null;
     }
-    
+
     if (errorMessage.includes("Access denied")) {
       router.push("/");
       return null;
@@ -72,7 +51,7 @@ export const BackstagePageClient = ({ streamId }: BackstagePageClientProps) => {
   }
 
   // Handle unauthorized access
-  if (!data || !data.isAuthorized || !tokenData) {
+  if (!data || !data.isAuthorized) {
     router.push("/");
     return null;
   }
@@ -84,12 +63,12 @@ export const BackstagePageClient = ({ streamId }: BackstagePageClientProps) => {
   }
 
   return (
-    <BackstageLayout 
+    <BackstageLayout
       stream={data.stream}
       currentUser={data.user}
       userRole={data.userRole}
-      token={tokenData.token}
-      serverUrl={tokenData.serverUrl}
+      token={data.token}
+      serverUrl={data.serverUrl}
     />
   );
 };

@@ -14,6 +14,10 @@ import {
   type SidebarMenuType,
 } from "@/store/backstage-atoms";
 
+// Sidebar width constants
+const SIDEBAR_WIDTH_EXPANDED = 475;
+const SIDEBAR_WIDTH_COLLAPSED = 120;
+
 const menuItems = [
   {
     icon: "/icon/chat.svg",
@@ -55,32 +59,36 @@ export function BackstageActionsSection({
   return (
     <div
       className={cn(
-        "h-full w-full max-w-[475px] bg-lightDarkCard flex gap-0 border-l border-border/40 transition-all duration-300 ease-in-out",
-        !isExpanded && "max-w-[120px]"
+        "h-full w-full bg-lightDarkCard flex gap-0 border-l border-border/40 transition-all duration-300 ease-in-out"
       )}
+      style={{
+        maxWidth: isExpanded ? `${SIDEBAR_WIDTH_EXPANDED}px` : `${SIDEBAR_WIDTH_COLLAPSED}px`,
+      }}
     >
-      {isExpanded && (
-        <div className="w-full h-full overflow-hidden">
-          {selectedMenuItem === "chat" && (
-            <BackstageChatPanel streamId={streamId} />
-          )}
-          {selectedMenuItem === "media" && (
-            <BackstageMediaPanel streamId={streamId} />
-          )}
-          {selectedMenuItem === "participants" && (
-            <BackstageParticipantsPanel
-              streamId={streamId}
-              currentUserId={currentUserId}
-              userRole={userRole}
-            />
-          )}
-          {selectedMenuItem === "tips" && (
-            <BackstageTipsPanel streamId={streamId} />
-          )}
+      {/* Keep all panels mounted to preserve state, toggle visibility instead */}
+      <div className={cn("w-full h-full overflow-hidden", !isExpanded && "hidden")}>
+        <div className={selectedMenuItem === "chat" ? "block h-full" : "hidden"}>
+          <BackstageChatPanel streamId={streamId} />
         </div>
-      )}
+        <div className={selectedMenuItem === "media" ? "block h-full" : "hidden"}>
+          <BackstageMediaPanel streamId={streamId} />
+        </div>
+        <div className={selectedMenuItem === "participants" ? "block h-full" : "hidden"}>
+          <BackstageParticipantsPanel
+            streamId={streamId}
+            currentUserId={currentUserId}
+            userRole={userRole}
+          />
+        </div>
+        <div className={selectedMenuItem === "tips" ? "block h-full" : "hidden"}>
+          <BackstageTipsPanel streamId={streamId} />
+        </div>
+      </div>
 
-      <div className="w-full h-full max-w-[120px] bg-transparent border-l border-border/40 px-2 py-10 flex flex-col gap-4">
+      <div 
+        className="w-full h-full bg-transparent border-l border-border/40 px-2 py-10 flex flex-col gap-4"
+        style={{ maxWidth: `${SIDEBAR_WIDTH_COLLAPSED}px` }}
+      >
         {menuItems.map((item) => (
           <BackstageActionMenuItem
             key={item.value}
