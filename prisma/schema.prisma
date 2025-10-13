@@ -28,6 +28,7 @@ model User {
   tipsSent               Tip[]               @relation("TipsSent")
   tipsReceived           Tip[]               @relation("TipsReceived")
   streamParticipations   StreamParticipant[]
+  backstageInvites       BackstageInvite[]
 }
 
 model Stream {
@@ -55,6 +56,7 @@ model Stream {
   subCategory         SubCategory?        @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
   tips                Tip[]
   participants        StreamParticipant[]
+  backstageInvites    BackstageInvite[]
 
   @@index([userId])
   @@index([ingressId])
@@ -208,6 +210,27 @@ model StreamParticipant {
   @@index([userId])
   @@index([role])
   @@index([status])
+}
+
+model BackstageInvite {
+  id          String            @id @default(uuid())
+  streamId    String
+  token       String            @unique
+  role        ParticipantRole   @default(CO_HOST)
+  maxUses     Int?              // null = unlimited uses
+  usedCount   Int               @default(0)
+  isActive    Boolean           @default(true)
+  expiresAt   DateTime?         // null = never expires
+  createdBy   String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  stream      Stream            @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  creator     User              @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([streamId])
+  @@index([token])
+  @@index([isActive])
+  @@index([createdBy])
 }
 
 enum TokenType {

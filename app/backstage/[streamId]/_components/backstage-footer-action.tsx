@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import {
   toggleMicAtom,
@@ -9,12 +10,18 @@ import {
 } from "@/store/backstage-atoms";
 import { BackstageFooterItem } from "./backstage-footer-item";
 import { BackstageFooterItemDropdown } from "./backstage-footer-item-dropdown";
+import { SimpleCohostInvite } from "./simple-cohost-invite";
 
-export function BackstageFooterAction() {
+interface BackstageFooterActionProps {
+  streamId: string;
+}
+
+export function BackstageFooterAction({ streamId }: BackstageFooterActionProps) {
   const mediaState = useAtomValue(mediaStateAtom);
   const [, toggleMic] = useAtom(toggleMicAtom);
   const [, toggleCamera] = useAtom(toggleCameraAtom);
   const [, toggleScreenShare] = useAtom(toggleScreenShareAtom);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const handleLeaveRoom = () => {
     // TODO: Implement leave room logic
@@ -22,8 +29,7 @@ export function BackstageFooterAction() {
   };
 
   const handleInviteUser = () => {
-    // TODO: Implement invite user logic
-    console.log("Invite user");
+    setShowInviteModal(true);
   };
 
   return (
@@ -58,6 +64,12 @@ export function BackstageFooterAction() {
         alt="logout-room"
         onClick={handleLeaveRoom}
         className="bg-red-700 hover:bg-red-800"
+      />
+
+      <SimpleCohostInvite
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        streamId={streamId}
       />
     </div>
   );

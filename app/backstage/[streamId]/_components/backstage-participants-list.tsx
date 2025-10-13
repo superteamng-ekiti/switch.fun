@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Video, VideoOff, UserPlus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStreamParticipants } from "@/hooks/use-stream-participants";
+import { SimpleCohostInvite } from "./simple-cohost-invite";
 
 interface BackstageParticipantsListProps {
   streamId: string;
@@ -20,6 +21,7 @@ export function BackstageParticipantsList({
   userRole,
 }: BackstageParticipantsListProps) {
   const { onlineParticipants, isLoading } = useStreamParticipants(streamId);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   // Filter to only show hosts and co-hosts (memoized to prevent unnecessary re-renders)
   const hostsAndCoHosts = useMemo(
@@ -64,14 +66,11 @@ export function BackstageParticipantsList({
             variant="ghost" 
             size="sm" 
             className="h-7 text-xs"
-            onClick={() => {
-              // TODO: Implement invite functionality
-              console.log('Invite participants');
-            }}
-            aria-label="Invite participants to backstage"
+            onClick={() => setShowInviteModal(true)}
+            aria-label="Invite co-host to backstage"
           >
             <UserPlus className="h-3 w-3 mr-1" aria-hidden="true" />
-            Invite
+            Invite Co-Host
           </Button>
         )}
       </div>
@@ -158,6 +157,12 @@ export function BackstageParticipantsList({
           </div>
         )}
       </div>
+
+      <SimpleCohostInvite
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        streamId={streamId}
+      />
     </div>
   );
 }

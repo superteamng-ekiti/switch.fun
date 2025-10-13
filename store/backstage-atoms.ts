@@ -13,13 +13,13 @@ import { atomWithStorage } from "jotai/utils";
 // ============================================================================
 
 export type LayoutType =
-  | "single"
-  | "double-full"
-  | "double-half"
-  | "grid"
-  | "main-screen"
-  | "multi-screen"
-  | "screen-vs";
+  | "single"           // 1. Single streamer with camera
+  | "multi-full"       // 2. Multi streamer full screen side-by-side  
+  | "multi-half"       // 3. Multi streamer half screen side-by-side
+  | "grid"             // 4. Multi streamer grid view
+  | "single-screen"    // 5. Single streamer with screen share
+  | "multi-screen"     // 6. Multi streamer with screen share
+  | "vs-screen";       // 7. VS layout with 2 streamers + shared screen
 
 export type SidebarMenuType = "chat" | "media" | "participants" | "tips" | null;
 

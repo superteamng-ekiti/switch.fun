@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { SimpleCohostInvite } from "./simple-cohost-invite";
 
 interface BackstageParticipantsPanelProps {
   streamId: string;
@@ -32,6 +34,8 @@ export function BackstageParticipantsPanel({
   currentUserId,
   userRole,
 }: BackstageParticipantsPanelProps) {
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  
   // TODO: Get participants from LiveKit
   const participants = [
     {
@@ -48,8 +52,7 @@ export function BackstageParticipantsPanel({
   const canManageParticipants = userRole === "HOST" || userRole === "CO_HOST";
 
   const handleInviteParticipant = () => {
-    // TODO: Open invite modal
-    console.log("Invite participant");
+    setShowInviteModal(true);
   };
 
   const handleManageParticipant = (participantId: string, action: string) => {
@@ -78,7 +81,7 @@ export function BackstageParticipantsPanel({
               onClick={handleInviteParticipant}
             >
               <UserPlus className="h-4 w-4 mr-2" />
-              Invite
+              Invite Co-Host
             </Button>
           )}
         </div>
@@ -195,6 +198,12 @@ export function BackstageParticipantsPanel({
           </div>
         )}
       </ScrollArea>
+
+      <SimpleCohostInvite
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        streamId={streamId}
+      />
     </div>
   );
 }

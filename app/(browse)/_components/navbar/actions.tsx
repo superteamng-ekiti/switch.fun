@@ -21,6 +21,8 @@ export const Actions = () => {
 
   const { data: currentUser, isLoading, isError, refetch } = useSelf();
 
+  console.log("currentUser", currentUser, user);
+
   // Handle modal opening logic
   useEffect(() => {
     // If we have a Civic user, check what needs to be done
